@@ -1,13 +1,13 @@
 <?php
 
-namespace dotars
+namespace dotars;
 
 class DotarsInit
 {
-	public static index()
+	public static function index()
 	{
-		$str = read();
-		addFile('./jiaohu.txt',$str);
+		$str = self::read();
+		self::addFile('./jiaohu.txt',$str);
 	}
 	public static function read($str = '请输入')
 	{
@@ -23,3 +23,5 @@ class DotarsInit
 		fclose($myfile);
 	}
 }
+
+DotarsInit::index();
