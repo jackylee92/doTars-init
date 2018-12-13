@@ -23,5 +23,3 @@ class DotarsInit
 		fclose($myfile);
 	}
 }
-
-DotarsInit::index();
