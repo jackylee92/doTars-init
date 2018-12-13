@@ -1,0 +1,13 @@
+{
+    "name": "ljd/dotars-init",
+    "description": "交互式录入用户项目数据",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "李俊东",
+            "email": "lijundong@51zhaoyou.com"
+        }
+    ],
+    "require": {}
+}
