@@ -9,5 +9,10 @@
             "email": "lijundong@51zhaoyou.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "dotars\\": "src/"
+        }
+    }
 }
