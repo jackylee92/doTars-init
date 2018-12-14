@@ -9,6 +9,7 @@ class DotarsInit
     {
         $param = [
             'doTarsIP' => self::mustRead('主控IP'),
+            'doTarsType' => self::mustRead('类型(server\client)'),
             'doTarsServerName' => self::mustRead('服务名'),
             'doTarsServantName' => self::mustRead('Servant名'),
             'doTarsObjName' => self::mustRead('Obj名'),
