@@ -15,6 +15,7 @@ class DotarsInit
 			'doTarsObjName' => self::mustRead('Obj名'),
 			];
 		self::addFile('./param.txt',json_encode($param,JSON_UNESCAPED_UNICODE));
+		chmod('./tmp/init.sh', 0777);
 		echo shell_exec('./tmp/init.sh '.$param['doTarsIP'].' '.$param['doTarsType'].' '.$param['doTarsServerName'].' '.$param['doTarsServantName'].' '.$param['doTarsObjName']);
 	}
 
