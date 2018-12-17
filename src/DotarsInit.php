@@ -19,6 +19,7 @@ class DotarsInit
 
         }
         $commond = './tmp/init.sh '.$doTarsIP.' '.$doTarsType.' '.$doTarsServerName.' '.$doTarsServantName.' '.$doTarsObjName;
+        echo $commond;
         chmod('./tmp/init.sh', 0777);
         echo shell_exec($commond);
     }
@@ -78,5 +79,3 @@ class DotarsInit
         }
     }
 }
-
-DotarsInit::index();
