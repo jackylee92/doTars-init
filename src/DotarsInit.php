@@ -20,7 +20,7 @@ class DotarsInit
         }
         $commond = './tmp/init.sh '.$doTarsIP.' '.$doTarsType.' '.$doTarsServerName.' '.$doTarsServantName.' '.$doTarsObjName;
         chmod('./tmp/init.sh', 0777);
-        shell_exec($commond);
+        echo shell_exec($commond);
         shell_exec('rm -rf tmp');
     }
 
