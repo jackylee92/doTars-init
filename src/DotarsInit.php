@@ -19,9 +19,9 @@ class DotarsInit
 
         }
         $commond = './tmp/init.sh '.$doTarsIP.' '.$doTarsType.' '.$doTarsServerName.' '.$doTarsServantName.' '.$doTarsObjName;
-        echo $commond;
         chmod('./tmp/init.sh', 0777);
-        echo shell_exec($commond);
+        shell_exec($commond);
+        shell_exec('rm -rf tmp');
     }
 
     public static function mustRead($name='',$functionName='validateTrue')
