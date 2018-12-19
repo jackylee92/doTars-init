@@ -101,7 +101,7 @@ return array(
     'namespacePrefix' => 'src\servant',
 );
 ";
-        if($f = file_put_contents('../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php', $content,FILE_APPEND)){// 这个函数支持版本(PHP 5)
+        if(!file_put_contents('../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php', $content,FILE_APPEND)){// 这个函数支持版本(PHP 5)
             exit('写入tars.proto.php失败!');
         }
         $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./'.$servantArr[0].$servantArr[1].'/tars.proto.php';
