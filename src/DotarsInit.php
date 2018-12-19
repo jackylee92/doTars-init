@@ -126,4 +126,3 @@ return array(
         return true;
     }
 }
-DotarsInit::servant();
