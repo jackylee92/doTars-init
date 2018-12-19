@@ -77,6 +77,14 @@ class DotarsInit
             return false;
         }
     }
+    public static function validateDir($dir)
+    {
+        if(is_dir($dir)) {
+            return true;
+        }else{
+            return false;
+        }
+    }
     public static function servant()
     {
         $servantFile = self::mustRead('Tars文件名');
@@ -105,6 +113,13 @@ return array(
             exit('写入tars.proto.php失败!');
         }
         $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./'.$servantArr[0].$servantArr[1].'/tars.proto.php';
+        shell_exec($commond);
+        $servantPath = './servant/'.$servantArr[0].'/'.$servantArr[1].'/'.$servantArr[2];
+	if(self::validateDir($servantPath)){
+            echo $servantArr[0].'.'.$servantArr[1].'.'.$servantArr[2].' 服务代码生成成功!!!';
+        }else {
+            echo $servantArr[0].'.'.$servantArr[1].'.'.$servantArr[2].' 服务代码生成失败!!!';
+        }
     }
     public static function servantName($name)
     {
