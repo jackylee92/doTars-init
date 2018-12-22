@@ -4,23 +4,154 @@ namespace dotars;
 
 class DotarsInit
 {
+    public $doTarsServerName;
+    public $doTarsServantName;
+    public $doTarsObjName;
+    public $doTarsIP;
+    public $doTarsType;
 
     public static function index()
     {
-        $doTarsIP = self::mustRead('主控IP','validateIp');
-        $doTarsType = self::mustRead('类型(server\client)','validateType');
-        $doTarsServerName = ucwords(self::mustRead('服务名'));
-        $doTarsServantName = ucwords(self::mustRead('Servant名'));
-        $doTarsObjName = ucwords(self::mustRead('Obj名'));
-        if($doTarsType == 'server' && !self::validateFile('../'.$doTarsServerName.$doTarsServantName.'.tars')) {
+        $this->doTarsIP = self::mustRead('主控IP','validateIp');
+        $this->doTarsType = self::mustRead('类型,服务端或者客户端(server\client)','validateType');
+        $doTarsServerCompleteName = ucwords(self::mustRead('服务名(例如:User.Server.Obj)'));
+        $doTarsServerCompleteNameArr = explode('.',$doTarsServerCompleteName);
+        $this->doTarsServerName = ucwords($doTarsServerCompleteNameArr[0]);
+        $this->doTarsServantName = ucwords($doTarsServerCompleteNameArr[1]);
+        $this->doTarsObjName = ucwords($doTarsServerCompleteNameArr[2]);
+        if($this->doTarsType == 'server' && !self::validateFile('../'.$this->doTarsServerName.$this->doTarsServantName.'.tars')) {
             shell_exec('rm -rf ./tmp composer.json');
-            exit($doTarsServerName.$doTarsServantName.'.tars 文件不存在，请定义在项目名同级！');
+            exit($this->doTarsServerName.$this->doTarsServantName.'.tars 文件不存在，请定义在项目名同级！');
 
         }
-        $commond = './tmp/init.sh '.$doTarsIP.' '.$doTarsType.' '.$doTarsServerName.' '.$doTarsServantName.' '.$doTarsObjName;
-        chmod('./tmp/init.sh', 0777);
-        echo shell_exec($commond);
-        shell_exec('rm -rf tmp');
+        mkdir('./src',0777,true);
+        mkdir('./tars',0777,true);
+        copy('./vender','./src/');
+
+        if($this->doTarsType == 'server' ) {
+            self::createServer();
+        }
+        if($this->doTarsType == 'client') {
+            self::createClient();
+        }
+        //exec('rm -rf tmp');
+    }
+    public static function createServer()
+    {
+        copy('./tmp/src/server/*', './src/');
+        copy('./tmp/tars/server.tars.proto.php', './tars/tars.proto.php');
+        $ipNeedReplacePath = [
+            './src/conf/ENVConf.php'
+        ];
+        foreach($ipNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'$doTarsIP', $this->doTarsIP);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        $serverNeedReplacePath = [
+            './src/conf/ENVConf.php',
+            './src/impl/IndexServantImpl.php',
+            './src/services.php',
+            './tars/tars.proto.php',
+        ];
+        foreach($serverNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'$doTarsServerName', $this->doTarsServerName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        $servantNeedReplacePath = [
+            './src/conf/ENVConf.php',
+            './src/impl/IndexServantImpl.php',
+            './src/services.php',
+            './tars/tars.proto.php',
+        ];
+        foreach($servantNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'$doTarsServantName', $this->doTarsServantName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        $objNeedReplacePath = [
+            './src/impl/IndexServantImpl.php',
+            './src/services.php',
+            './tars/tars.proto.php',
+        ];
+        foreach($objNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,' $doTarsObjName', $this->doTarsObjName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+        copy('../'.$this->doTarsServerName.$this->doTarsServantName.'.tars', './tars/');
+        self::tars2php();
+    }
+
+    public static function tars2php()
+    {
+        $commond = 'cd tars/ && php ../src/vendor/phptars/tars2php/src/tars2php.php ./tars.proto.php';
+        exec($commond);
+
+        $outPutDir= './src/servant/'.$this->doTarsServerName.'/'.$this->doTarsServantName.'/'.$this->doTarsObjName;
+        if(!is_dir($outPutDir)) {
+            throw new \Exception('tars文件生成代码失败',400);
+        }
+        $outPutDirLs = scandir($outPutDir);
+        $outPutImpl = '';
+        foreach($outPutDirLs as $item){
+            if(strstr($item,'.php')){
+                $outPutImpl = $outPutDir.'/'.$item;
+            }
+        }
+        if(!is_file($outPutImpl)){
+            throw new \Exception('接口文件获取失败',400);
+        }
+        $useCode = '';
+        $funcCode = '';
+        $funcStart = false;
+        $fp = fopen($outPutImpl, 'r');
+        while($line = fgets($fp, 1024) !== false) {
+            if(strpos($line, 'use') === 0) {
+                $useCode .= $line."\n";
+            }
+            if(strpos($lins, '}') !== false) {
+                $funcStart = false;
+            }
+            if($funcStart) {
+                $funcCode .= str_replace(';','{}',$line) ."\n";
+            }
+            if(strpos($lins, '{') !== false) {
+                $funcStart = true;
+            }
+        }
+        var_dump([$useCode,$funcCode]);
+        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php',' $doTarsUseCode', $useCode);
+        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php',' $doTarsFunctionBody', $funcCode);
+
+    }
+
+    public static function fileReplaceKeyword($path, $keyword, $content)
+    {
+        try {
+            if(is_file($path)){
+                return ['code' => 400, 'msg' => '替换['.$path.']时未找到指定文件!'];
+            }
+            $tmp = file_get_contents($path);
+            $tmp = str_replace($key,$content,$tmp);
+            if(!file_put_contents($path,$tmp)){
+                throw new \Exception('更新内容写入失败', 401);
+            }
+            $code = true;
+            $msg = 'ok';
+        } catch (\Exception $e) {
+            $code = $e->getCode();
+            $msg = $e->getMessage();
+        }
+        return ['code' => $code, 'msg' => $msg];
     }
 
     public static function mustRead($name='',$functionName='validateTrue')
