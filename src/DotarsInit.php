@@ -343,4 +343,3 @@ return array(
         return true;
     }
 }
-DotarsInit::index();
