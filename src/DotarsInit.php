@@ -181,7 +181,7 @@ class DotarsInit
                 $funcStart = false;
             }
             if($funcStart) {
-                $funcCode .= str_replace(';','{}',$line);
+                $funcCode .= str_replace(';',"\n    {}",$line);
             }
             if(strpos($line, '{') !== false) {
                 $funcStart = true;
