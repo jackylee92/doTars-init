@@ -4,52 +4,107 @@ namespace dotars;
 
 class DotarsInit
 {
-    public $doTarsServerName;
-    public $doTarsServantName;
-    public $doTarsObjName;
-    public $doTarsIP;
-    public $doTarsType;
-
     public static function index()
     {
-        $this->doTarsIP = self::mustRead('主控IP','validateIp');
-        $this->doTarsType = self::mustRead('类型,服务端或者客户端(server\client)','validateType');
-        $doTarsServerCompleteName = ucwords(self::mustRead('服务名(例如:User.Server.Obj)'));
-        $doTarsServerCompleteNameArr = explode('.',$doTarsServerCompleteName);
-        $this->doTarsServerName = ucwords($doTarsServerCompleteNameArr[0]);
-        $this->doTarsServantName = ucwords($doTarsServerCompleteNameArr[1]);
-        $this->doTarsObjName = ucwords($doTarsServerCompleteNameArr[2]);
-        if($this->doTarsType == 'server' && !self::validateFile('../'.$this->doTarsServerName.$this->doTarsServantName.'.tars')) {
-            shell_exec('rm -rf ./tmp composer.json');
-            exit($this->doTarsServerName.$this->doTarsServantName.'.tars 文件不存在，请定义在项目名同级！');
+        try{
+            $doTarsIP = self::mustRead('主控IP','validateIp');
+            $doTarsType = self::mustRead('类型,服务端或者客户端(server\client)','validateType');
+            $doTarsServerCompleteName = ucwords(self::mustRead('服务名(例如:User.Server.Obj)','validateServantPath'));
 
-        }
-        mkdir('./src',0777,true);
-        mkdir('./tars',0777,true);
-        copy('./vender','./src/');
+            $doTarsServerCompleteNameArr = explode('.',$doTarsServerCompleteName);
+            $doTarsServerName = ucwords($doTarsServerCompleteNameArr[0]);
+            $doTarsServantName = ucwords($doTarsServerCompleteNameArr[1]);
+            $doTarsObjName = ucwords($doTarsServerCompleteNameArr[2]);
+            if($doTarsType == 'server' && !self::validateFile('../'.$doTarsServerName.$doTarsServantName.'.tars')) {
+                self::cleanTmp();
+                exit($doTarsServerName.$doTarsServantName.'.tars 文件不存在，请定义在项目名同级！');
 
-        if($this->doTarsType == 'server' ) {
-            self::createServer();
+            }
+            mkdir('./src',0777,true);
+            mkdir('./tars',0777,true);
+            self::copyDir('./vendor', './src/');
+
+            if($doTarsType == 'server' ) {
+                self::createServer($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName);
+            }
+            if($doTarsType == 'client') {
+                self::createClient($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName);
+            }
+            self::cleanTmp();
+            exit(' [Success] 欢迎使用doTars生成！！！');
+        } catch(\Exception $e) {
+            $code = $e->getCode();
+            $msg = $e->getMessage();
+            self::cleanTmp();
+            exit(' [Error] doTars生成失败 [Code]'.$code.' [Msg]'.$msg.'！！！');
         }
-        if($this->doTarsType == 'client') {
-            self::createClient();
-        }
-        //exec('rm -rf tmp');
     }
-    public static function createServer()
+    public static function createClient($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName)
     {
-        copy('./tmp/src/server/*', './src/');
-        copy('./tmp/tars/server.tars.proto.php', './tars/tars.proto.php');
+        self::copyDir('./tmp/src/client/*','./src/');
+        self::copyDir('./tmp/tars/client.tars.proto.php', './tars/tars.proto.php');
+        // replace ip
         $ipNeedReplacePath = [
             './src/conf/ENVConf.php'
         ];
         foreach($ipNeedReplacePath as $item){
-            $repRes = self::fileReplaceKeyword($item,'$doTarsIP', $this->doTarsIP);
+            $repRes = self::fileReplaceKeyword($item,'${doTarsIP}', $doTarsIP);
             if($repRes['code'] !== true) {
                 throw new \Exception($repRes['msg'], $repRes['code']);
             }
         }
 
+        // replace doTarsServerName
+        $serverNeedReplacePath = [
+            './src/conf/ENVConf.php',
+            './tars/tars.proto.php',
+        ];
+        foreach($serverNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'${doTarsServerName}', $doTarsServerName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        // replace doTarsServantName
+        $servantNeedReplacePath = [
+            './src/conf/ENVConf.php',
+            './tars/tars.proto.php',
+        ];
+        foreach($servantNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'${doTarsServantName}', $doTarsServantName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        // replace doTarsObjName
+        $objNeedReplacePath = [
+            './tars/tars.proto.php',
+        ];
+        foreach($objNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'${doTarsObjName}', $doTarsObjName);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+    }
+    public static function createServer($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName)
+    {
+        self::copyDir('./tmp/src/server/*','./src/');
+        self::copyDir('./tmp/tars/server.tars.proto.php', './tars/tars.proto.php');
+        // replace ip
+        $ipNeedReplacePath = [
+            './src/conf/ENVConf.php'
+        ];
+        foreach($ipNeedReplacePath as $item){
+            $repRes = self::fileReplaceKeyword($item,'${doTarsIP}', $doTarsIP);
+            if($repRes['code'] !== true) {
+                throw new \Exception($repRes['msg'], $repRes['code']);
+            }
+        }
+
+        // replace doTarsServerName
         $serverNeedReplacePath = [
             './src/conf/ENVConf.php',
             './src/impl/IndexServantImpl.php',
@@ -57,12 +112,13 @@ class DotarsInit
             './tars/tars.proto.php',
         ];
         foreach($serverNeedReplacePath as $item){
-            $repRes = self::fileReplaceKeyword($item,'$doTarsServerName', $this->doTarsServerName);
+            $repRes = self::fileReplaceKeyword($item,'${doTarsServerName}', $doTarsServerName);
             if($repRes['code'] !== true) {
                 throw new \Exception($repRes['msg'], $repRes['code']);
             }
         }
 
+        // replace doTarsServantName
         $servantNeedReplacePath = [
             './src/conf/ENVConf.php',
             './src/impl/IndexServantImpl.php',
@@ -70,78 +126,92 @@ class DotarsInit
             './tars/tars.proto.php',
         ];
         foreach($servantNeedReplacePath as $item){
-            $repRes = self::fileReplaceKeyword($item,'$doTarsServantName', $this->doTarsServantName);
+            $repRes = self::fileReplaceKeyword($item,'${doTarsServantName}', $doTarsServantName);
             if($repRes['code'] !== true) {
                 throw new \Exception($repRes['msg'], $repRes['code']);
             }
         }
 
+        // replace doTarsObjName
         $objNeedReplacePath = [
             './src/impl/IndexServantImpl.php',
             './src/services.php',
             './tars/tars.proto.php',
         ];
         foreach($objNeedReplacePath as $item){
-            $repRes = self::fileReplaceKeyword($item,' $doTarsObjName', $this->doTarsObjName);
+            $repRes = self::fileReplaceKeyword($item,'${doTarsObjName}', $doTarsObjName);
             if($repRes['code'] !== true) {
                 throw new \Exception($repRes['msg'], $repRes['code']);
             }
         }
-        copy('../'.$this->doTarsServerName.$this->doTarsServantName.'.tars', './tars/');
-        self::tars2php();
+        self::copyDir('../'.$doTarsServerName.$doTarsServantName.'.tars', './tars/');
+        self::tars2php($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName);
     }
 
-    public static function tars2php()
+    public static function tars2php($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName)
     {
         $commond = 'cd tars/ && php ../src/vendor/phptars/tars2php/src/tars2php.php ./tars.proto.php';
         exec($commond);
 
-        $outPutDir= './src/servant/'.$this->doTarsServerName.'/'.$this->doTarsServantName.'/'.$this->doTarsObjName;
+        $outPutDir= './src/servant/'.$doTarsServerName.'/'.$doTarsServantName.'/'.$doTarsObjName;
         if(!is_dir($outPutDir)) {
             throw new \Exception('tars文件生成代码失败',400);
         }
         $outPutDirLs = scandir($outPutDir);
         $outPutImpl = '';
+        $outPutImpl = '';
         foreach($outPutDirLs as $item){
             if(strstr($item,'.php')){
-                $outPutImpl = $outPutDir.'/'.$item;
+                $outPutImpl = str_replace('.php','',$item);
             }
         }
-        if(!is_file($outPutImpl)){
+        $outPutImplDir = $outPutDir.'/'.$outPutImpl.'.php';
+        if(!is_file($outPutImplDir)){
             throw new \Exception('接口文件获取失败',400);
         }
         $useCode = '';
         $funcCode = '';
         $funcStart = false;
-        $fp = fopen($outPutImpl, 'r');
-        while($line = fgets($fp, 1024) !== false) {
+        $fp = fopen($outPutImplDir, 'r');
+        while(($line = fgets($fp, 1024)) !== false) {
             if(strpos($line, 'use') === 0) {
-                $useCode .= $line."\n";
+                $useCode .= $line;
             }
-            if(strpos($lins, '}') !== false) {
+            if(strpos($line, '}') !== false) {
                 $funcStart = false;
             }
             if($funcStart) {
-                $funcCode .= str_replace(';','{}',$line) ."\n";
+                $funcCode .= str_replace(';','{}',$line);
             }
-            if(strpos($lins, '{') !== false) {
+            if(strpos($line, '{') !== false) {
                 $funcStart = true;
             }
         }
-        var_dump([$useCode,$funcCode]);
-        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php',' $doTarsUseCode', $useCode);
-        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php',' $doTarsFunctionBody', $funcCode);
+        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php','${doTarsUseCode}', $useCode);
+        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php','${doTarsFunctionBody}', $funcCode);
+        $repRes = self::fileReplaceKeyword('./src/impl/IndexServantImpl.php','${doTarsServantImplName}', $outPutImpl);
+        $repRes = self::fileReplaceKeyword('./src/services.php','${doTarsServantImplName}', $outPutImpl);
 
+    }
+
+    public static function copyDir($dir,$toDir)
+    {
+        exec('cp -rf '.$dir.' '.$toDir);
+    }
+
+    public static function cleanTmp()
+    {
+        exec('rm -rf tmp composer*');
     }
 
     public static function fileReplaceKeyword($path, $keyword, $content)
     {
         try {
-            if(is_file($path)){
+            if(!is_file($path)){
                 return ['code' => 400, 'msg' => '替换['.$path.']时未找到指定文件!'];
             }
             $tmp = file_get_contents($path);
-            $tmp = str_replace($key,$content,$tmp);
+            $tmp = str_replace($keyword,$content,$tmp);
             if(!file_put_contents($path,$tmp)){
                 throw new \Exception('更新内容写入失败', 401);
             }
@@ -160,8 +230,11 @@ class DotarsInit
         $data = self::read($tips);
         while($data == '' || !call_user_func([new self,$functionName],$data))
         {
+            echo 1;
             $tips = '请填写正确的'.$name;
+            echo 2;
             $data = self::read($tips);
+            echo 3;
         }
         return $data;
     }
@@ -246,7 +319,7 @@ return array(
         $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./'.$servantArr[0].$servantArr[1].'/tars.proto.php';
         shell_exec($commond);
         $servantPath = './servant/'.$servantArr[0].'/'.$servantArr[1].'/'.$servantArr[2];
-	if(self::validateDir($servantPath)){
+        if(self::validateDir($servantPath)){
             echo $servantArr[0].'.'.$servantArr[1].'.'.$servantArr[2].' 服务代码生成成功!!!';
         }else {
             echo $servantArr[0].'.'.$servantArr[1].'.'.$servantArr[2].' 服务代码生成失败!!!';
@@ -272,3 +345,4 @@ return array(
         return true;
     }
 }
+DotarsInit::index();
