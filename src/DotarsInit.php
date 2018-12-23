@@ -201,7 +201,7 @@ class DotarsInit
 
     public static function cleanTmp()
     {
-        exec('rm -rf tmp composer*');
+        exec('rm -rf tmp composer* vendor');
     }
 
     public static function fileReplaceKeyword($path, $keyword, $content)
