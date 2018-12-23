@@ -23,6 +23,7 @@ class DotarsInit
             mkdir('./src',0777,true);
             mkdir('./tars',0777,true);
             self::copyDir('./vendor', './src/');
+            self::copyDir('./composer*', './src/');
 
             if($doTarsType == 'server' ) {
                 self::createServer($doTarsIP, $doTarsServerName, $doTarsServantName, $doTarsObjName);
@@ -230,11 +231,8 @@ class DotarsInit
         $data = self::read($tips);
         while($data == '' || !call_user_func([new self,$functionName],$data))
         {
-            echo 1;
             $tips = '请填写正确的'.$name;
-            echo 2;
             $data = self::read($tips);
-            echo 3;
         }
         return $data;
     }
