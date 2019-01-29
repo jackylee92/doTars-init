@@ -9,12 +9,12 @@ class DotarsInit
         try{
             $doTarsIP = self::mustRead('主控IP','validateIp');
             $doTarsType = self::mustRead('类型,服务端或者客户端(server\client)','validateType');
-            $doTarsServerCompleteName = ucwords(self::mustRead('服务名(例如:User.Server.Obj)','validateServantPath'));
+            $doTarsServerCompleteName = self::mustRead('服务名(例如:User.Server.Obj)','validateServantPath');
 
             $doTarsServerCompleteNameArr = explode('.',$doTarsServerCompleteName);
-            $doTarsServerName = ucwords($doTarsServerCompleteNameArr[0]);
-            $doTarsServantName = ucwords($doTarsServerCompleteNameArr[1]);
-            $doTarsObjName = ucwords($doTarsServerCompleteNameArr[2]);
+            $doTarsServerName = $doTarsServerCompleteNameArr[0];
+            $doTarsServantName = $doTarsServerCompleteNameArr[1];
+            $doTarsObjName = $doTarsServerCompleteNameArr[2];
             if($doTarsType == 'server' && !self::validateFile('../'.$doTarsServerName.$doTarsServantName.'.tars')) {
                 self::cleanTmp();
                 exit($doTarsServerName.$doTarsServantName.'.tars 文件不存在，请定义在项目名同级！');
@@ -294,7 +294,7 @@ class DotarsInit
         if(!self::validateFile('../tars/'.$servantFile)) {
             exit($servantFile.'文件不存在tars目录中！');
         }
-        $servantPath = ucwords(self::mustRead('服务地址(Servant.Server.Obj)','validateServantPath'));
+        $servantPath = self::mustRead('服务地址(Servant.Server.Obj)','validateServantPath');
         $servantArr = explode('.',$servantPath);
         $commond = 'mkdir ../tars/'.$servantArr[0].$servantArr[1].' && touch ../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php && mv ../tars/'.$servantFile.' ../tars/'.$servantArr[0].$servantArr[1].'/';
         shell_exec($commond);
