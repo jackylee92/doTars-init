@@ -296,9 +296,16 @@ class DotarsInit
         }
         $servantPath = self::mustRead('服务地址(Servant.Server.Obj)','validateServantPath');
         $servantArr = explode('.',$servantPath);
-        $commond = 'mkdir ../tars/'.$servantArr[0].$servantArr[1].' && touch ../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php && mv ../tars/'.$servantFile.' ../tars/'.$servantArr[0].$servantArr[1].'/';
-        shell_exec($commond);
-        $content = "<?php
+        $protoInfo = require '../tars/tars.proto.php';
+        if(isset($protoInfo['withServant']) && $protoInfo['withServant'] == true && $protoInfo['appName'] == $servantArr[0] && $protoInfo['serverName'] == $servantArr[1] && $protoInfo['objName'] == $servantArr[2]) {
+            $commond = 'rm -rf ./servant/'.$servantArr[0].'/'.$servantArr[1].'/'.$servantArr[2];
+            shell_exec($commond);
+            $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./tars.proto.php';
+        }else {
+
+            $commond = 'mkdir ../tars/'.$servantArr[0].$servantArr[1].' && touch ../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php && mv ../tars/'.$servantFile.' ../tars/'.$servantArr[0].$servantArr[1].'/';
+            shell_exec($commond);
+            $content = "<?php
 return array(
     'appName' => '".$servantArr[0]."',
     'serverName' => '".$servantArr[1]."',
@@ -311,10 +318,12 @@ return array(
     'namespacePrefix' => 'src\servant',
 );
 ";
-        if(!file_put_contents('../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php', $content,FILE_APPEND)){// 这个函数支持版本(PHP 5)
-            exit('写入tars.proto.php失败!');
+            if(!file_put_contents('../tars/'.$servantArr[0].$servantArr[1].'/tars.proto.php', $content,FILE_APPEND)){// 这个函数支持版本(PHP 5)
+                exit('写入tars.proto.php失败!');
+            }
+            $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./'.$servantArr[0].$servantArr[1].'/tars.proto.php';
+
         }
-        $commond = 'cd ../tars && php ../src/vendor/phptars/tars2php/src/tars2php.php ./'.$servantArr[0].$servantArr[1].'/tars.proto.php';
         shell_exec($commond);
         $servantPath = './servant/'.$servantArr[0].'/'.$servantArr[1].'/'.$servantArr[2];
         if(self::validateDir($servantPath)){
